@@ -8,66 +8,78 @@ class firestoreDB extends StatefulWidget {
 }
 
 class _firestoreDBState extends State<firestoreDB> {
-
-  CollectionReference usersCollection = FirebaseFirestore.instance.collection('users');
-
-
-
-
+  CollectionReference usersCollection =
+      FirebaseFirestore.instance.collection('users');
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Firestore DB'),),
-
+      appBar: AppBar(
+        title: Text('Firestore DB'),
+      ),
       body: Container(
         alignment: Alignment.center,
         child: Column(
           children: [
-            RaisedButton(child: Text('Save data'),onPressed: ()=>{
-
-              usersCollection.add({'index ' : '1' , 'about' :
-              'jahgbdgjkhdbgkhjdg' , 'name' : 'Mohammed' ,
-                'picture' : 'https://randomuser.me/api/portraits/men/'
-                , 'company' : 'Google' , 'email' : 'mml@gmail.com'})
-
-            }),
+            ElevatedButton(
+                child: Text('Save data'),
+                onPressed: () => {
+                      usersCollection.add({
+                        'index ': '1',
+                        'about': 'jahgbdgjkhdbgkhjdg',
+                        'name': 'Mohammed',
+                        'picture': 'https://randomuser.me/api/portraits/men/',
+                        'company': 'Google',
+                        'email': 'mml@gmail.com'
+                      })
+                    }),
 
             Container(
-             height: 300,
-             child: FutureBuilder(
-               future: usersCollection.doc('UUk2LNQpQ6DysDDaCTzj').get(),
-               builder: (context, AsyncSnapshot<DocumentSnapshot> documentSnapshot ){
+              height: 300,
+              child: FutureBuilder(
+                future: usersCollection.doc('UUk2LNQpQ6DysDDaCTzj').get(),
+                builder: (context,
+                    AsyncSnapshot<DocumentSnapshot> documentSnapshot) {
+                  if (documentSnapshot.connectionState ==
+                      ConnectionState.done) {
+                    Map data = documentSnapshot.data.data();
+                    return ListTile(
+                      title: Text(data['name']),
+                      subtitle: Text(data['email']),
+                    );
+                  }
 
-                 if(documentSnapshot.connectionState == ConnectionState.done){
+                  return ListTile(
+                    title: Text('Loading...'),
+                  );
+                },
+              ),
+            ),
 
-                   Map data = documentSnapshot.data.data();
-                   return ListTile(
-
-                     title: Text(data['name']),
-                     subtitle: Text(data['email']),
-
-                   );
-                 }
-
-                 return ListTile(
-                   title: Text('Loading...'),
-
-                 );
-
-               },
-
-             ),
-
+            // ignore: missing_required_param
+            Expanded(
+              child: StreamBuilder<QuerySnapshot>(
+                stream: usersCollection.snapshots(),
+                builder: (context, AsyncSnapshot<QuerySnapshot> querySnapshot) {
+                  if (querySnapshot.hasError) {
+                    return Text(querySnapshot.hasError.toString());
+                  } else if (querySnapshot.connectionState ==
+                      ConnectionState.waiting) {
+                    return Text('Loading');
+                  } else {
+                    return ListView(
+                          children: querySnapshot.data.docs.map((e) {
+                        return ListTile(
+                          title: Text(e.data()['name']),
+                          subtitle: Text(e.data()['email']),
+                        );
+                      }).toList());
+                  }
+                },
+              ),
             )
-
           ],
-
         ),
-
-
-
-
       ),
     );
   }
